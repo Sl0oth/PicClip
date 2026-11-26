@@ -10,18 +10,30 @@ Take a screenshot (⇧⌘3 / ⇧⌘4) and a preview clips itself to the corner o
 
 Quitting PicClip gives you back the normal macOS thumbnail.
 
-## Requirements
-macOS 15 or later.
+## Install
+macOS 15 or later, Apple Silicon or Intel. Paste this into Terminal:
 
-## Build & run
 ```sh
-./build.sh run
+curl -fsSL https://github.com/Sl0oth/PicClip/releases/latest/download/PicClip.zip -o /tmp/PicClip.zip \
+  && ditto -xk /tmp/PicClip.zip /Applications && open /Applications/PicClip.app
 ```
-That builds `build/PicClip.app` and launches it. Drag it into `/Applications` to keep it, and turn on **Launch at Login** from the menu bar icon.
 
-## Update
+It downloads the latest release, unzips it into Applications, and opens it. Then turn on **Launch at Login** from the menu bar icon.
+
+<details><summary>Prefer downloading it yourself?</summary>
+
+Grab `PicClip.zip` from [Releases](https://github.com/Sl0oth/PicClip/releases/latest), unzip it, and drag PicClip into Applications.
+PicClip isn't notarized by Apple (that costs $99/year), so the first launch shows a warning. Open **System Settings → Privacy & Security**, scroll down, and click **Open Anyway**. You only do this once.
+</details>
+
+## Updates
+PicClip checks GitHub for new releases once a day (or use **Check for Updates…** in the menu). Click **Install & Relaunch** and you're done.
+
+## Develop
 ```sh
-git pull && ./build.sh run
+./build.sh run                 # build build/PicClip.app and launch it
+scripts/make-signing-cert.sh   # once: free self-signed cert, so permissions + updates survive rebuilds
+./release.sh 0.2.0 "notes"     # bump version, build, tag, publish a GitHub release
 ```
 
 ## Project layout
@@ -31,3 +43,5 @@ git pull && ./build.sh run
 | `Resources/Info.plist` | Bundle settings |
 | `Resources/Icon/` | Icon sources (`AppIcon.svg`, `MenuBarIcon.svg`); run `make-icon.sh` after editing |
 | `build.sh` | Builds and signs the `.app` |
+| `release.sh` | Publishes a release to GitHub (the in-app updater reads these) |
+| `scripts/make-signing-cert.sh` | One-time signing certificate setup |

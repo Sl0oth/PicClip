@@ -7,6 +7,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let previews = PreviewManager()
     private let pins = PinManager()
     private lazy var library = LibraryController(store: store)
+    private let updater = Updater()
     private var statusItem: NSStatusItem?
     private var previewsMenuItem: NSMenuItem?
     private var loginMenuItem: NSMenuItem?
@@ -17,6 +18,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        if AppMover.offerMoveIfNeeded() { return }
         if previewsEnabled { SystemScreenshots.suppressThumbnail() }
         CrashGuard.install(restoring: SystemScreenshots.savedThumbnail ?? true)
 
@@ -25,10 +27,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         pins.onOpen = { [unowned self] in library.show(selecting: $0) }
         library.onPin = { [unowned self] in pins.pin($0) }
         store.onNewScreenshot = { [unowned self] in if previewsEnabled { previews.show($0) } }
+        store.onFolderAccessDenied = { [unowned self] in askForFolderAccess() }
         store.start()
 
         NSApp.mainMenu = makeMainMenu()
         makeStatusItem()
+        updater?.start()
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -39,6 +43,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         library.show()
         return false
+    }
+
+    /// One-time nudge, opened straight to the switch they need to flip.
+    private func askForFolderAccess() {
+        let alert = NSAlert()
+        alert.messageText = "PicClip needs to see your screenshots"
+        alert.informativeText = """
+            macOS is blocking PicClip from your \(SystemScreenshots.folder.lastPathComponent) folder, where screenshots are saved.
+
+            In Files & Folders, find PicClip and turn on “\(SystemScreenshots.folder.lastPathComponent) Folder”. You only do this once — PicClip picks it up right away.
+            """
+        alert.addButton(withTitle: "Open Privacy Settings")
+        alert.addButton(withTitle: "Not Now")
+        NSApp.activate()
+        if alert.runModal() == .alertFirstButtonReturn,
+           let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_FilesAndFolders") {
+            NSWorkspace.shared.open(url)
+        }
     }
 
     // MARK: Status menu
@@ -55,6 +77,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let loginItem = menuItem("Launch at Login", #selector(toggleLogin))
         menu.addItem(previewsItem)
         menu.addItem(loginItem)
+        menu.addItem(menuItem("Check for Updates…", #selector(checkForUpdates)))
         previewsMenuItem = previewsItem
         loginMenuItem = loginItem
         menu.addItem(.separator())
@@ -88,6 +111,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc private func openLibrary() { library.show() }
 
+    @objc private func checkForUpdates() { updater?.check(userInitiated: true) }
+
     @objc private func openFolder() { NSWorkspace.shared.open(SystemScreenshots.folder) }
 
     @objc private func togglePreviews() {
@@ -110,6 +135,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private func makeMainMenu() -> NSMenu {
         let appMenu = NSMenu()
         appMenu.addItem(withTitle: "About PicClip", action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)), keyEquivalent: "")
+        appMenu.addItem(menuItem("Check for Updates…", #selector(checkForUpdates)))
         appMenu.addItem(.separator())
         appMenu.addItem(withTitle: "Hide PicClip", action: #selector(NSApplication.hide(_:)), keyEquivalent: "h")
         appMenu.addItem(withTitle: "Quit PicClip", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")

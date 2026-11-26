@@ -38,3 +38,19 @@ Menu bar app (no Dock icon) that replaces the macOS screenshot thumbnail with a 
 - Library: grid grouped by day with sticky headers (Today / Yesterday / date), hover states, time-only labels,
   Preview-style canvas backdrop, info bar (name · dimensions · size · date), tool hint text.
 - Files: new `Editor.swift`; edits to `Library.swift`, `Thumbnails.swift` (pixel size, invalidate), `ScreenshotStore.swift` (revisions).
+
+## Release & updates (free — no Apple Developer Program)
+- **Updater** (`Updater.swift`): checks `api.github.com/repos/<repo>/releases/latest` 10 s after launch + daily, and on "Check for Updates…".
+  Newer tag → native alert (Install & Relaunch / Later / Skip This Version) → downloads `PicClip.zip` asset → unzips next to the app →
+  verifies bundle id + intact code signature (+ same signer when not ad-hoc) → swaps the bundle → relaunches.
+  App-downloaded files aren't quarantined, so updates never hit Gatekeeper. Repo comes from `PicClipGitHubRepo` in Info.plist.
+- **Signing**: `scripts/make-signing-cert.sh` (run once) makes a free self-signed "PicClip Self-Signed" cert. Stable signature →
+  macOS keeps permissions across updates, and the updater can require updates come from the same signer. `build.sh` prefers it, else ad-hoc.
+- **Releasing**: `./release.sh 0.2.0 ["notes"]` → bump version → universal build → zip → commit + tag → push → `gh release create`.
+- **Install for users**: one `curl … | ditto` line in the README (no Gatekeeper prompt), or download + "Open Anyway".
+- Repo must be **public** for the updater (and curl install) to see releases.
+
+## Release checklist (blocked on hands-on testing)
+1. Hands-on test pass of every feature.
+2. Make the signing cert, pick a license, flip repo public, `./release.sh 0.1.0`.
+3. README media: GIFs + screenshots, recorded after step 1.

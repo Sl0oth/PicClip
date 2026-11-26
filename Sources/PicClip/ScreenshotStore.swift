@@ -18,6 +18,9 @@ final class ScreenshotStore {
     /// Bumped when PicClip edits a file, so thumbnails showing it reload.
     private(set) var revisions: [URL: Int] = [:]
     @ObservationIgnored var onNewScreenshot: (Screenshot) -> Void = { _ in }
+    /// macOS refused access to the screenshot folder (user clicked "Don't Allow").
+    @ObservationIgnored var onFolderAccessDenied: () -> Void = {}
+    @ObservationIgnored private var accessRetry: Timer?
     @ObservationIgnored private let query = NSMetadataQuery()
     @ObservationIgnored private var observers: [NSObjectProtocol] = []
     @ObservationIgnored private var spotlightShots: [Screenshot] = []
@@ -38,7 +41,22 @@ final class ScreenshotStore {
 
     private func watchFolder() {
         let fd = open(folder.path, O_EVTONLY)
-        guard fd >= 0 else { return }
+        guard fd >= 0 else {
+            guard errno == EPERM || errno == EACCES, accessRetry == nil else { return }
+            onFolderAccessDenied()
+            // Quietly retry so turning access on in System Settings just works — no relaunch needed.
+            accessRetry = Timer.scheduledTimer(withTimeInterval: 3, repeats: true) { [weak self] _ in
+                MainActor.assumeIsolated {
+                    guard let self, open(self.folder.path, O_EVTONLY).closingIfValid else { return }
+                    self.accessRetry?.invalidate()
+                    self.accessRetry = nil
+                    self.watchFolder()
+                }
+            }
+            return
+        }
+        accessRetry?.invalidate()
+        accessRetry = nil
         folderNames = Set(listFolder())
         for name in folderNames { if let shot = screenshot(named: name) { folderShots[shot.url] = shot } }
         let source = DispatchSource.makeFileSystemObjectSource(fileDescriptor: fd, eventMask: .write, queue: .main)
@@ -142,5 +160,14 @@ final class ScreenshotStore {
         let extras = folderShots.values.filter { !spotlightURLs.contains($0.url) }
         let live = spotlightShots.filter { folderShots[$0.url] != nil || $0.url.deletingLastPathComponent() != folder }
         shots = (extras + live).sorted { $0.date > $1.date }
+    }
+}
+
+private extension Int32 {
+    /// For probing access: true if this is a valid descriptor (which is closed right away).
+    var closingIfValid: Bool {
+        guard self >= 0 else { return false }
+        close(self)
+        return true
     }
 }
