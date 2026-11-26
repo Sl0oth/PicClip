@@ -45,3 +45,8 @@ scripts/make-signing-cert.sh   # once: free self-signed cert, so permissions + u
 | `build.sh` | Builds and signs the `.app` |
 | `release.sh` | Publishes a release to GitHub (the in-app updater reads these) |
 | `scripts/make-signing-cert.sh` | One-time signing certificate setup |
+
+## License
+Copyright © 2026 Sl0oth. PicClip is free software under the [GNU GPL v3](LICENSE): you can use, study, change, and share it, but any version you distribute must keep this notice and be released under GPL-3.0 with its full source.
+
+The PicClip name and logo are not covered by the GPL. Forks must use a different name and icon.

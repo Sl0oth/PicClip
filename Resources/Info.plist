@@ -12,6 +12,7 @@
     <key>LSMinimumSystemVersion</key><string>15.0</string>
     <key>CFBundleIconFile</key><string>AppIcon</string>
     <key>PicClipGitHubRepo</key><string>Sl0oth/PicClip</string>
+    <key>NSHumanReadableCopyright</key><string>Copyright © 2026 Sl0oth. Licensed under GPL-3.0.</string>
     <key>LSUIElement</key><true/>
     <key>NSHighResolutionCapable</key><true/>
     <key>NSDesktopFolderUsageDescription</key><string>PicClip shows previews of the screenshots you save to your Desktop.</string>
