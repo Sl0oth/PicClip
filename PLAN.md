@@ -54,3 +54,8 @@ Menu bar app (no Dock icon) that replaces the macOS screenshot thumbnail with a 
 1. Hands-on test pass of every feature.
 2. Make the signing cert, pick a license, flip repo public, `./release.sh 0.1.0`.
 3. README media: GIFs + screenshots, recorded after step 1.
+
+## README media (done)
+`docs/media/` holds capture/drag/pin/edit GIFs + library.png/menu.png. Re-record with `scripts/demo/record.sh`
+(needs Terminal Screen Recording + Accessibility, Terminal not full screen). App's hidden `DemoMode` shows only the
+generated "Screenshot demo …" shots and new captures, and lifts the library window above the recording backdrop.

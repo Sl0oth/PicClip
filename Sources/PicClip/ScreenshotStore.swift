@@ -29,12 +29,16 @@ final class ScreenshotStore {
     @ObservationIgnored private var announced: Set<URL> = []
     @ObservationIgnored private var watcher: DispatchSourceFileSystemObject?
     @ObservationIgnored private let folder = SystemScreenshots.folder
+    /// Demo mode: hide every pre-existing screenshot except the generated "Screenshot demo …" ones.
+    @ObservationIgnored private let demoSince: Date? = UserDefaults.standard.bool(forKey: "DemoMode") ? Date() : nil
 
     func didEdit(_ url: URL) { revisions[url, default: 0] += 1 }
 
     func start() {
         watchFolder()
-        startQuery()
+        // Demo mode (for recording README media): only the screenshot folder, never Spotlight's view of all of ~.
+        // `defaults write app.picclip.PicClip DemoMode -bool true`
+        if !UserDefaults.standard.bool(forKey: "DemoMode") { startQuery() }
     }
 
     // MARK: Folder watcher
@@ -103,6 +107,7 @@ final class ScreenshotStore {
         let url = folder.appending(path: name)
         guard getxattr(url.path, "com.apple.metadata:kMDItemIsScreenCapture", nil, 0, 0, 0) > 0 else { return nil }
         let date = (try? url.resourceValues(forKeys: [.creationDateKey]).creationDate) ?? .now
+        if let demoSince, !name.hasPrefix("Screenshot demo"), date < demoSince { return nil }
         return Screenshot(url: url, date: date)
     }
 

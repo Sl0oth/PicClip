@@ -2,11 +2,29 @@
 
 A tiny macOS menu bar app that replaces the screenshot thumbnail that vanishes after a few seconds with one that **stays put** until you're done with it.
 
-Take a screenshot (⇧⌘3 / ⇧⌘4) and a preview clips itself to the corner of your screen:
+Take a screenshot (⇧⌘3 / ⇧⌘4) and a preview clips itself to the corner of your screen, and stays there:
 
-- **Drag** it into any app to drop the image in
-- **Copy** it, **pin** it above all your windows, or **✕** dismiss it
-- **Click** it to open the library, where you can mark it up with a marker, black out, blur, or pixelate parts of it
+![Taking a screenshot: the preview slides into the corner and stays](docs/media/capture.gif)
+
+### Drag it anywhere
+Drag the preview into any app (Messages, Slack, Mail, a browser) to drop the image in.
+
+![Dragging the preview into a chat](docs/media/drag.gif)
+
+### Pin it on top
+Hover for **Copy**, **Pin**, and **✕**. A pinned screenshot floats above every window; drag it around, close it when you're done.
+
+![Pinning a screenshot above other windows](docs/media/pin.gif)
+
+### Mark it up, hide what's private
+Click the preview to open the library. Draw with the **marker**, **black out** card numbers and passwords, **blur** or **pixelate** anything else, then save.
+
+![Blacking out, blurring, pixelating, and circling in the editor](docs/media/edit.gif)
+
+<p align="center">
+  <img src="docs/media/library.png" alt="The PicClip library" width="720"><br>
+  <img src="docs/media/menu.png" alt="The PicClip menu bar menu" width="400">
+</p>
 
 Quitting PicClip gives you back the normal macOS thumbnail.
 

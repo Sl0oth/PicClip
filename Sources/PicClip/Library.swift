@@ -51,15 +51,18 @@ final class LibraryController: NSObject, NSWindowDelegate {
 
     private func makeWindow() -> NSWindow {
         let host = NSHostingController(rootView: LibraryView(store: store, model: model, onPin: { [weak self] in self?.onPin($0) }))
-        host.sceneBridgingOptions = [.toolbars, .title]
+        host.sceneBridgingOptions = [.toolbars] // title bridging shows "Untitled" in AppKit-hosted windows
         let window = NSWindow(contentViewController: host)
         window.styleMask = [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView]
         window.toolbarStyle = .unified
+        window.title = "Screenshots"
         window.isReleasedWhenClosed = false
         window.delegate = self
         window.setContentSize(NSSize(width: 1100, height: 700))
         window.center()
         window.setFrameAutosaveName("PicClipLibrary")
+        // Demo mode (README recording): sit above the recording backdrop, below pins and previews.
+        if UserDefaults.standard.bool(forKey: "DemoMode") { window.level = NSWindow.Level(rawValue: NSWindow.Level.normal.rawValue + 2) }
         self.window = window
         return window
     }
@@ -94,8 +97,6 @@ struct LibraryView: View {
             }
         }
         .frame(minWidth: 760, minHeight: 480)
-        .navigationTitle(selected?.name ?? "Screenshots")
-        .navigationSubtitle(store.shots.count == 1 ? "1 screenshot" : "\(store.shots.count) screenshots")
         .toolbar { toolbar }
         .onChange(of: selected, initial: true) { _, shot in model.syncEditor(to: shot) }
     }
@@ -282,21 +283,26 @@ private struct EditorPane: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            ZStack(alignment: .bottom) {
+            ZStack {
                 Color(nsColor: .underPageBackgroundColor)
                 canvas
-                    .padding(EdgeInsets(top: 24, leading: 28, bottom: 92, trailing: 28))
+                    .padding(EdgeInsets(top: 24, leading: 28, bottom: 118, trailing: 28))
+            }
+            // An overlay never changes the pane's size, so a wide palette can't stretch or zoom the image.
+            .overlay(alignment: .bottom) {
                 VStack(spacing: 8) {
                     Text(editor.isSaving ? "Saving…" : model.tool.hint)
                         .font(.callout)
                         .foregroundStyle(.secondary)
                         .contentTransition(.opacity)
                     EditPalette(editor: editor, model: model)
+                        .fixedSize()
                 }
                 .padding(.bottom, 16)
             }
+            .clipped()
             Divider()
-            InfoBar(shot: shot, pixelSize: editor.pixelSize, edited: editor.isDirty)
+            InfoBar(shot: shot, editor: editor)
         }
         .task { await editor.load() }
         .onChange(of: model.tool, initial: true) { _, tool in
@@ -342,63 +348,57 @@ private struct EditPalette: View {
     @Bindable var model: LibraryModel
 
     var body: some View {
-        HStack(spacing: 2) {
-            ForEach(EditTool.allCases) { tool in
-                PaletteButton(symbol: tool.symbol, help: "\(tool.title) (\(tool.key.character.uppercased()))",
-                              isOn: model.tool == tool) { model.tool = tool }
-                    .keyboardShortcut(tool.key, modifiers: [])
-            }
-
+        VStack(spacing: 6) {
+            // Marker options get their own small bar, so the main palette stays narrow in any window size.
             if model.tool == .marker {
-                separator
-                ForEach(MarkerColor.allCases) { color in
-                    Button { model.markerColor = color } label: {
-                        Circle().fill(color.color)
-                            .frame(width: 16, height: 16)
-                            .overlay(Circle().strokeBorder(.white.opacity(0.6), lineWidth: 1))
-                            .padding(3)
-                            .overlay(Circle().strokeBorder(model.markerColor == color ? Color.primary.opacity(0.7) : .clear, lineWidth: 1.5))
+                HStack(spacing: 2) {
+                    ForEach(MarkerColor.allCases) { color in
+                        Button { model.markerColor = color } label: {
+                            Circle().fill(color.color)
+                                .frame(width: 16, height: 16)
+                                .overlay(Circle().strokeBorder(.white.opacity(0.6), lineWidth: 1))
+                                .padding(3)
+                                .overlay(Circle().strokeBorder(model.markerColor == color ? Color.primary.opacity(0.7) : .clear, lineWidth: 1.5))
+                        }
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
-                }
-                separator
-                ForEach(MarkerSize.allCases) { size in
-                    Button { model.markerSize = size } label: {
-                        Circle().fill(.primary)
-                            .frame(width: 3 + size.rawValue * 0.8, height: 3 + size.rawValue * 0.8)
-                            .frame(width: 26, height: 26)
-                            .background(model.markerSize == size ? AnyShapeStyle(.quaternary) : AnyShapeStyle(.clear), in: Circle())
-                            .contentShape(Circle())
+                    separator
+                    ForEach(MarkerSize.allCases) { size in
+                        Button { model.markerSize = size } label: {
+                            Circle().fill(.primary)
+                                .frame(width: 3 + size.rawValue * 0.8, height: 3 + size.rawValue * 0.8)
+                                .frame(width: 24, height: 24)
+                                .background(model.markerSize == size ? AnyShapeStyle(.quaternary) : AnyShapeStyle(.clear), in: Circle())
+                                .contentShape(Circle())
+                        }
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
                 }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 3)
+                .modifier(PaletteBackground())
+                .transition(.move(edge: .bottom).combined(with: .opacity))
             }
 
-            separator
-            PaletteButton(symbol: "arrow.uturn.backward", help: "Undo (⌘Z)", isOn: false, action: editor.undo)
-                .keyboardShortcut("z")
-                .disabled(!editor.isDirty)
-            PaletteButton(symbol: "arrow.uturn.forward", help: "Redo (⇧⌘Z)", isOn: false, action: editor.redo)
-                .keyboardShortcut("z", modifiers: [.command, .shift])
-                .disabled(!editor.canRedo)
-
-            if editor.isDirty {
+            HStack(spacing: 2) {
+                ForEach(EditTool.allCases) { tool in
+                    PaletteButton(symbol: tool.symbol, help: "\(tool.title) (\(tool.key.character.uppercased()))",
+                                  isOn: model.tool == tool) { model.tool = tool }
+                        .keyboardShortcut(tool.key, modifiers: [])
+                }
                 separator
-                Button("Revert", action: editor.revert)
-                    .buttonStyle(.borderless)
-                    .padding(.horizontal, 6)
-                Button("Save") { Task { await editor.save() } }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.small)
-                    .keyboardShortcut("s")
-                    .disabled(editor.isSaving)
+                PaletteButton(symbol: "arrow.uturn.backward", help: "Undo (⌘Z)", isOn: false, action: editor.undo)
+                    .keyboardShortcut("z")
+                    .disabled(!editor.isDirty)
+                PaletteButton(symbol: "arrow.uturn.forward", help: "Redo (⇧⌘Z)", isOn: false, action: editor.redo)
+                    .keyboardShortcut("z", modifiers: [.command, .shift])
+                    .disabled(!editor.canRedo)
             }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 5)
+            .modifier(PaletteBackground())
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 5)
-        .modifier(PaletteBackground())
         .animation(.snappy(duration: 0.2), value: model.tool)
-        .animation(.snappy(duration: 0.2), value: editor.isDirty)
     }
 
     private var separator: some View {
@@ -456,8 +456,7 @@ private struct PaletteBackground: ViewModifier {
 
 private struct InfoBar: View {
     let shot: Screenshot
-    let pixelSize: CGSize
-    let edited: Bool
+    let editor: Editor
 
     private var fileSize: String? {
         (try? shot.url.resourceValues(forKeys: [.fileSizeKey]).fileSize).map {
@@ -468,20 +467,29 @@ private struct InfoBar: View {
     var body: some View {
         HStack(spacing: 14) {
             Label(shot.date.formatted(.dateTime.weekday().month().day().hour().minute()), systemImage: "calendar")
-            if pixelSize != .zero {
-                Label("\(Int(pixelSize.width)) × \(Int(pixelSize.height))", systemImage: "aspectratio")
+            if editor.pixelSize != .zero {
+                Label("\(Int(editor.pixelSize.width)) × \(Int(editor.pixelSize.height))", systemImage: "aspectratio")
             }
-            if let fileSize { Label(fileSize, systemImage: "doc") }
-            Spacer()
-            if edited {
-                Label("Unsaved edits", systemImage: "pencil.circle.fill")
+            if !editor.isDirty, let fileSize { Label(fileSize, systemImage: "doc") }
+            Spacer(minLength: 8)
+            if editor.isDirty {
+                Label("Edited", systemImage: "pencil.circle.fill")
                     .foregroundStyle(.orange)
+                Button("Revert", action: editor.revert)
+                    .controlSize(.small)
+                Button("Save") { Task { await editor.save() } }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.small)
+                    .keyboardShortcut("s")
+                    .disabled(editor.isSaving)
             }
         }
+        .lineLimit(1)
         .font(.callout)
         .foregroundStyle(.secondary)
         .labelStyle(.titleAndIcon)
         .padding(.horizontal, 16)
-        .padding(.vertical, 9)
+        .padding(.vertical, 7)
+        .animation(.snappy(duration: 0.2), value: editor.isDirty)
     }
 }
