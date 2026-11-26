@@ -1,23 +1,25 @@
 # PicClip
 
-A tiny macOS menu bar app that replaces the screenshot thumbnail that vanishes after a few seconds with one that **stays put** until you're done with it.
+PicClip replaces the macOS screenshot preview. Instead of disappearing after a few seconds, the preview stays in the corner of your screen until you're done with it.
 
-Take a screenshot (⇧⌘3 / ⇧⌘4) and a preview clips itself to the corner of your screen, and stays there:
+Take a screenshot like you normally would (⇧⌘3 or ⇧⌘4) and it shows up in the corner:
 
-![Taking a screenshot: the preview slides into the corner and stays](docs/media/capture.gif)
+![Taking a screenshot. The preview slides into the corner and stays there.](docs/media/capture.gif)
 
-### Drag it anywhere
-Drag the preview into any app (Messages, Slack, Mail, a browser) to drop the image in.
+### Drag it into any app
+Drag the preview into Messages, Slack, Discord, your browser, or anywhere else that takes images. Once you drop it, the preview goes away.
 
 ![Dragging the preview into a chat](docs/media/drag.gif)
 
-### Pin it on top
-Hover for **Copy**, **Pin**, and **✕**. A pinned screenshot floats above every window; drag it around, close it when you're done.
+### Copy, pin, or close it
+Hover over the preview to copy it, pin it, or close it. A pinned screenshot floats on top of all your windows, so you can keep it in view while you work. You can drag it wherever you want.
 
-![Pinning a screenshot above other windows](docs/media/pin.gif)
+![Pinning a screenshot on top of another window](docs/media/pin.gif)
 
-### Mark it up, hide what's private
-Click the preview to open the library. Draw with the **marker**, **black out** card numbers and passwords, **blur** or **pixelate** anything else, then save.
+### Mark it up and hide private info
+Click the preview to open it in the library. You can draw on it with the marker, or black out, blur, or pixelate anything you don't want people to see, then save.
+
+Blur and pixelate are fine for most things, but use black out for anything that's actually sensitive.
 
 ![Blacking out, blurring, pixelating, and circling in the editor](docs/media/edit.gif)
 
@@ -26,45 +28,48 @@ Click the preview to open the library. Draw with the **marker**, **black out** c
   <img src="docs/media/menu.png" alt="The PicClip menu bar menu" width="400">
 </p>
 
-Quitting PicClip gives you back the normal macOS thumbnail.
+If you quit PicClip, the normal macOS preview comes back.
 
 ## Install
-macOS 15 or later, Apple Silicon or Intel. Paste this into Terminal:
+PicClip needs macOS 15 or later and works on both Apple Silicon and Intel Macs. The easiest way to install it is to paste this into Terminal:
 
 ```sh
 curl -fsSL https://github.com/Sl0oth/PicClip/releases/latest/download/PicClip.zip -o /tmp/PicClip.zip \
   && ditto -xk /tmp/PicClip.zip /Applications && open /Applications/PicClip.app
 ```
 
-It downloads the latest release, unzips it into Applications, and opens it. Then turn on **Launch at Login** from the menu bar icon.
+That downloads the latest version, puts it in your Applications folder, and opens it. After that, turn on Launch at Login from the menu bar icon so it's always running.
 
-<details><summary>Prefer downloading it yourself?</summary>
+<details><summary>Don't want to use Terminal?</summary>
 
-Grab `PicClip.zip` from [Releases](https://github.com/Sl0oth/PicClip/releases/latest), unzip it, and drag PicClip into Applications.
-PicClip isn't notarized by Apple (that costs $99/year), so the first launch shows a warning. Open **System Settings → Privacy & Security**, scroll down, and click **Open Anyway**. You only do this once.
+Download `PicClip.zip` from [Releases](https://github.com/Sl0oth/PicClip/releases/latest), unzip it, and drag PicClip into your Applications folder.
+
+The first time you open it, macOS will say it can't verify the app. That's because Apple charges $99 a year to verify apps, and PicClip is free. To open it anyway, go to **System Settings → Privacy & Security**, scroll down, and click **Open Anyway**. You only have to do this once.
 </details>
 
 ## Updates
-PicClip checks GitHub for new releases once a day (or use **Check for Updates…** in the menu). Click **Install & Relaunch** and you're done.
+PicClip checks for updates once a day. You can also check yourself with **Check for Updates…** in the menu. When a new version is out, click **Install & Relaunch** and you're done.
 
-## Develop
+## Building it yourself
 ```sh
-./build.sh run                 # build build/PicClip.app and launch it
-scripts/make-signing-cert.sh   # once: free self-signed cert, so permissions + updates survive rebuilds
-./release.sh 0.2.0 "notes"     # bump version, build, tag, publish a GitHub release
+./build.sh run                 # build and open the app
+scripts/make-signing-cert.sh   # run once so permissions don't reset after every build
+./release.sh 0.2.0 "notes"     # publish a new version on GitHub
 ```
 
-## Project layout
-| Path | What |
+| Path | What's there |
 | --- | --- |
-| `Sources/PicClip/` | The app (Swift, AppKit + SwiftUI) |
-| `Resources/Info.plist` | Bundle settings |
-| `Resources/Icon/` | Icon sources (`AppIcon.svg`, `MenuBarIcon.svg`); run `make-icon.sh` after editing |
-| `build.sh` | Builds and signs the `.app` |
-| `release.sh` | Publishes a release to GitHub (the in-app updater reads these) |
-| `scripts/make-signing-cert.sh` | One-time signing certificate setup |
+| `Sources/PicClip/` | The app (Swift) |
+| `Resources/Info.plist` | App settings |
+| `Resources/Icon/` | The icons. Run `make-icon.sh` after changing them. |
+| `build.sh` | Builds and signs the app |
+| `release.sh` | Publishes a release (the app updates from these) |
+| `scripts/make-signing-cert.sh` | One-time signing setup |
+| `scripts/demo/record.sh` | Re-records the GIFs at the top of this page |
 
 ## License
-Copyright © 2026 Sl0oth. PicClip is free software under the [GNU GPL v3](LICENSE): you can use, study, change, and share it, but any version you distribute must keep this notice and be released under GPL-3.0 with its full source.
+PicClip is licensed under [GPL-3.0](LICENSE). You can use it, read the code, change it, and share it. If you release your own version, you have to keep my copyright notice and release your code under GPL-3.0 too.
 
-The PicClip name and logo are not covered by the GPL. Forks must use a different name and icon.
+The PicClip name and logo aren't covered by the license, so if you fork it, please use a different name and icon.
+
+Copyright © 2026 Sl0oth

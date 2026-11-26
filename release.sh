@@ -1,5 +1,5 @@
 #!/bin/bash
-# Usage: ./release.sh 0.2.0 ["What changed"]   (notes default to "Bug fixes and improvements.")
+# Usage: ./release.sh 0.2.0 ["What changed"]   (notes default to "Bug fixes and small improvements.")
 # Bumps the version, builds a universal app, zips it, commits + tags, pushes, and publishes a GitHub release.
 # Installed copies pick it up automatically (Check for Updates… or within a day).
 set -euo pipefail
@@ -26,15 +26,15 @@ git commit -qam "Release $VERSION"
 git tag "v$VERSION"
 git push -q origin HEAD "v$VERSION"
 # Change notes first (shown in the in-app update alert), then first-install help (hidden there via the marker).
-NOTES="${2:-Bug fixes and improvements.}
+NOTES="${2:-Bug fixes and small improvements.}
 
 <!-- install -->
 ---
-### New to PicClip? One-time setup
-**Easiest:** paste this into Terminal. It installs PicClip into Applications and opens it, with no security warning:
+### New to PicClip?
+The easiest way to install it is to paste this into Terminal. It puts PicClip in your Applications folder and opens it, without the security warning:
 \`\`\`sh
 curl -fsSL https://github.com/$(gh repo view --json nameWithOwner -q .nameWithOwner)/releases/latest/download/PicClip.zip -o /tmp/PicClip.zip && ditto -xk /tmp/PicClip.zip /Applications && open /Applications/PicClip.app
 \`\`\`
-**Or download PicClip.zip below:** unzip it, drag PicClip into Applications, and open it. macOS will say it can't verify the app (PicClip is free and isn't paid-notarized by Apple). Open **System Settings → Privacy & Security**, scroll down, click **Open Anyway**. You only do this once. Updates install themselves after that."
+Or download PicClip.zip below, unzip it, and drag it into your Applications folder. The first time you open it, macOS will say it can't verify the app (Apple charges \$99 a year for that, and PicClip is free). Go to **System Settings → Privacy & Security**, scroll down, and click **Open Anyway**. You only have to do this once. Updates install themselves after that."
 gh release create "v$VERSION" build/PicClip.zip --title "PicClip $VERSION" --notes "$NOTES"
 echo "Released PicClip $VERSION"
