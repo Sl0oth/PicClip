@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <rect x="100" y="100" width="824" height="824" rx="185" fill="#1C1C1E"/>
+  <g transform="translate(0 30) rotate(-8 512 520)">
+    <!-- photo -->
+    <rect x="222" y="392" width="440" height="408" rx="40" fill="#FFFFFF"/>
+    <circle cx="574" cy="500" r="34" fill="#1C1C1E"/>
+    <path d="M266 756 L386 606 L464 692 L540 598 L620 756 Z" fill="#1C1C1E"/>
+    <!-- chip clip, side view: one chunky piece, jaws closed on the photo, back end sprung open a little -->
+    <g fill="#FF5A36">
+      <path d="M690 316 L838 290 Q862 286 866 310 L872 344 Q876 368 852 372 L700 392 Z"/>
+      <path d="M690 460 L838 486 Q862 490 866 466 L872 432 Q876 408 852 404 L700 384 Z"/>
+      <path d="M244 318 H716 V458 H244 Q194 458 194 388 Q194 318 244 318 Z"/>
+    </g>
+    <!-- seam between the jaws -->
+    <rect x="236" y="382" width="420" height="12" rx="6" fill="#1C1C1E"/>
+    <!-- spring -->
+    <circle cx="690" cy="388" r="40" fill="none" stroke="#1C1C1E" stroke-width="14"/>
+  </g>
+</svg>

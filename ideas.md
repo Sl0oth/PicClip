@@ -1,0 +1,13 @@
+# Ideas (parked — not in v1)
+- Swipe right on preview to dismiss (like native)
+- Optional auto-dismiss timer
+- Library: arrow-key navigation, search, Quick Look on Space, thumbnail size slider
+- Markup / annotate before sharing
+- Support clipboard-only screenshots (⌃⇧⌘4) and screen recordings
+- Pin: scroll to zoom, opacity control, click-through mode
+- Settings window
+- Layered Icon Composer icon (full macOS 26 glass depth)
+- Editor: arrows, boxes, text, highlighter, crop
+- Editor: select/move/delete individual annotations after drawing (now: undo only)
+- Editor: "Save as copy" instead of overwriting
+- Unsaved edits are lost if you quit PicClip mid-edit (switching screenshots / closing the window does save)
